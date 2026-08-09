@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0f5a3a" />
+  <meta name="description" content="Al-Aqsa Catering Center event cost, invoice, revenue, budget, and expense manager." />
+  <title>Al-Aqsa Catering Center — Operations Manager</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <h1>Al-Aqsa</h1>
+          <p>Catering Center</p>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-btn active" data-view="dashboard"><span>▦</span> Dashboard</button>
+        <button class="nav-btn" data-view="event"><span>＋</span> New Event</button>
+        <button class="nav-btn" data-view="invoice"><span>▤</span> Invoices</button>
+        <button class="nav-btn" data-view="history"><span>↶</span> Previous Events</button>
+        <button class="nav-btn" data-view="catalog"><span>≡</span> Item Catalog</button>
+        <button class="nav-btn" data-view="settings"><span>⚙</span> Settings</button>
+      </nav>
+
+      <div class="sync-card">
+        <div class="status-row"><span id="syncDot" class="status-dot offline"></span><strong id="syncLabel">Local mode</strong></div>
+        <p id="syncHint">Data is saved on this device. Connect Google Sheets in Settings to sync.</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button id="menuToggle" class="icon-btn mobile-only" aria-label="Open menu">☰</button>
+        <div>
+          <h2 id="pageTitle">Dashboard</h2>
+          <p id="pageSubtitle">Event costs, invoices, payments, dues, revenue, budgets, and monthly overview</p>
+        </div>
+        <div class="topbar-actions">
+          <button id="quickInvoice" class="secondary-btn">▤ Invoice</button>
+          <button id="quickNewEvent" class="primary-btn">＋ New Event</button>
+        </div>
+      </header>
+
+      <section id="view-dashboard" class="view active">
+        <div class="toolbar card compact-toolbar">
+          <div>
+            <label for="dashboardMonth">Month</label>
+            <input id="dashboardMonth" type="month" />
+          </div>
+          <div class="month-budget-box">
+            <label for="monthBudget">Monthly budget</label>
+            <div class="money-input"><span class="currency-symbol">৳</span><input id="monthBudget" type="number" min="0" step="0.01" placeholder="0" /></div>
+          </div>
+          <button id="saveMonthBudget" class="secondary-btn">Save Budget</button>
+          <button id="exportMonthCsv" class="ghost-btn">Export CSV</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card"><span>Monthly cost</span><strong id="statMonthCost">৳0</strong><small id="statMonthEvents">0 events</small></article>
+          <article class="stat-card"><span>Budget remaining</span><strong id="statBudgetRemaining">৳0</strong><small id="statBudgetUsage">No monthly budget</small></article>
+          <article class="stat-card"><span>Average event cost</span><strong id="statAverageCost">৳0</strong><small>For selected month</small></article>
+          <article class="stat-card"><span>Highest event</span><strong id="statHighestCost">৳0</strong><small id="statHighestName">—</small></article>
+        </div>
+
+        <div class="stats-grid revenue-stats">
+          <article class="stat-card revenue-card"><span>Monthly revenue</span><strong id="statMonthRevenue">৳0</strong><small id="statInvoiceEvents">0 invoiced events</small></article>
+          <article class="stat-card revenue-card"><span>Average invoice revenue</span><strong id="statAverageRevenue">৳0</strong><small>For selected month</small></article>
+          <article class="stat-card revenue-card"><span>Revenue − recorded costs</span><strong id="statGrossDifference">৳0</strong><small>Operational picture, before other overheads</small></article>
+          <article class="stat-card revenue-card"><span>Highest invoice</span><strong id="statHighestRevenue">৳0</strong><small id="statHighestInvoiceName">—</small></article>
+        </div>
+
+        <div class="stats-grid payment-stats">
+          <article class="stat-card payment-stat-card"><span>Cash received this month</span><strong id="statMonthReceived">৳0</strong><small>Based on payment received dates</small></article>
+          <article class="stat-card payment-stat-card"><span>Outstanding due</span><strong id="statMonthDue">৳0</strong><small>For invoices in selected event month</small></article>
+          <article class="stat-card payment-stat-card"><span>Paid invoices</span><strong id="statPaidInvoices">0</strong><small>Fully paid in selected event month</small></article>
+          <article class="stat-card payment-stat-card"><span>Overdue invoices</span><strong id="statOverdueInvoices">0</strong><small>Due date passed with balance remaining</small></article>
+        </div>
+
+        <div class="grid-2 dashboard-grid">
+          <article class="card">
+            <div class="card-head"><div><h3>Monthly budget usage</h3><p>Actual cost compared with budget</p></div></div>
+            <div class="budget-meter-wrap">
+              <div class="budget-meter"><div id="budgetMeterFill"></div></div>
+              <div class="budget-meter-labels"><span id="budgetSpentLabel">Spent: ৳0</span><span id="budgetLimitLabel">Budget: ৳0</span></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Cost by event</h3><p>Selected month</p></div></div>
+            <div id="costBars" class="cost-bars empty-state">No event data for this month.</div>
+          </article>
+        </div>
+
+        <div class="grid-2 dashboard-grid">
+          <article class="card">
+            <div class="card-head"><div><h3>Revenue by invoice</h3><p>Selected month</p></div><button class="ghost-btn" data-go="invoice">Open invoices</button></div>
+            <div id="revenueBars" class="cost-bars empty-state">No invoice data for this month.</div>
+          </article>
+          <article class="card monthly-picture-card">
+            <div class="card-head"><div><h3>Monthly operating picture</h3><p>Revenue compared with recorded event product costs</p></div></div>
+            <div class="picture-grid">
+              <div><span>Invoices</span><strong id="pictureInvoiceCount">0</strong></div>
+              <div><span>Expense events</span><strong id="pictureEventCount">0</strong></div>
+              <div><span>Revenue</span><strong id="pictureRevenue">৳0</strong></div>
+              <div><span>Recorded costs</span><strong id="pictureCosts">৳0</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <article class="card">
+          <div class="card-head">
+            <div><h3>Recent events</h3><p>Open, print, or reuse an earlier event</p></div>
+            <button class="ghost-btn" data-go="history">View all</button>
+          </div>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>Date</th><th>Event</th><th>Guests</th><th>Items</th><th>Budget</th><th>Cost</th><th></th></tr></thead><tbody id="recentEventsBody"></tbody></table></div>
+        </article>
+
+        <article class="card">
+          <div class="card-head">
+            <div><h3>Recent invoices</h3><p>Review revenue, print invoices, or duplicate an earlier order</p></div>
+            <button class="ghost-btn" data-go="invoice">View invoices</button>
+          </div>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>Order</th><th>Date</th><th>Client</th><th>Revenue</th><th>Received</th><th>Due</th><th></th></tr></thead><tbody id="recentInvoicesBody"></tbody></table></div>
+        </article>
+      </section>
+
+      <section id="view-event" class="view">
+        <form id="eventForm" autocomplete="off">
+          <input id="eventId" type="hidden" />
+          <article class="card">
+            <div class="card-head">
+              <div><h3 id="eventFormTitle">New Event</h3><p>Enter event information, menu, quantities, and prices.</p></div>
+              <div class="event-head-actions"><button id="resetEventBtn" type="button" class="ghost-btn">Clear</button><button id="printCurrentBtn" type="button" class="ghost-btn">Print</button><button type="submit" class="primary-btn">Save Event</button></div>
+            </div>
+
+            <div class="form-grid four">
+              <div class="field"><label for="partyName">Party / Event name *</label><input id="partyName" required placeholder="e.g. Rahman Wedding" /></div>
+              <div class="field"><label for="eventDate">Event date *</label><input id="eventDate" type="date" required /></div>
+              <div class="field"><label for="guestCount">Guest count</label><input id="guestCount" type="number" min="0" step="1" placeholder="0" /></div>
+              <div class="field"><label for="eventTime">Event time</label><input id="eventTime" type="time" /></div>
+              <div class="field span-2"><label for="eventAddress">Address / Venue</label><input id="eventAddress" placeholder="Venue or address" /></div>
+              <div class="field"><label for="eventBudget">Event budget</label><div class="money-input"><span class="currency-symbol">৳</span><input id="eventBudget" type="number" min="0" step="0.01" placeholder="0" /></div></div>
+              <div class="field"><label for="eventNotes">Notes</label><input id="eventNotes" placeholder="Optional note" /></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-head stacked-mobile">
+              <div><h3>Menu</h3><p>Select standard dishes or add a custom menu for this event.</p></div>
+              <button id="clearMenuBtn" type="button" class="ghost-btn">Clear menu</button>
+            </div>
+            <div class="custom-menu-entry">
+              <div class="field custom-menu-field">
+                <label for="customMenuInput">Add custom menu item</label>
+                <div class="custom-menu-controls">
+                  <input id="customMenuInput" type="text" placeholder="e.g. Beef biryani, chicken roast, firni" />
+                  <button id="addCustomMenuBtn" type="button" class="secondary-btn">＋ Add to Menu</button>
+                </div>
+                <small>Type one or several dishes separated by commas, then press Enter or Add to Menu.</small>
+              </div>
+            </div>
+            <div id="menuChips" class="menu-chips"></div>
+          </article>
+
+          <article class="card item-entry-card">
+            <div class="card-head stacked-mobile">
+              <div><h3>Products & goods used</h3><p>Enter quantity and unit price. Line totals are calculated automatically.</p></div>
+              <div class="item-tools">
+                <input id="itemSearch" type="search" placeholder="Search item…" />
+                <select id="itemFilter"><option value="all">All items</option><option value="used">Used only</option><option value="unused">Unused only</option></select>
+                <button id="addCustomItem" type="button" class="secondary-btn">＋ Add Item</button>
+              </div>
+            </div>
+
+            <div class="table-wrap item-table-wrap">
+              <table class="data-table item-table">
+                <thead><tr><th class="tiny">Use</th><th class="tiny">#</th><th>Item</th><th>Unit</th><th>Quantity</th><th>Unit price</th><th>Total</th><th>Note</th><th class="tiny"></th></tr></thead>
+                <tbody id="eventItemsBody"></tbody>
+              </table>
+            </div>
+
+            <div class="event-summary-bar">
+              <div><span>Items used</span><strong id="summaryItemCount">0</strong></div>
+              <div><span>Total cost</span><strong id="summaryCost">৳0</strong></div>
+              <div><span>Budget</span><strong id="summaryBudget">৳0</strong></div>
+              <div><span>Remaining</span><strong id="summaryRemaining">৳0</strong></div>
+              <button type="submit" class="primary-btn">Save Event</button>
+            </div>
+          </article>
+        </form>
+      </section>
+
+      <section id="view-invoice" class="view">
+        <form id="invoiceForm" autocomplete="off">
+          <input id="invoiceId" type="hidden" />
+          <article class="card">
+            <div class="card-head stacked-mobile">
+              <div><h3 id="invoiceFormTitle">New Invoice</h3><p>Create an order invoice and automatically calculate event revenue.</p></div>
+              <div class="event-head-actions"><button id="resetInvoiceBtn" type="button" class="ghost-btn">Clear</button><button id="printInvoiceBtn" type="button" class="ghost-btn">Print Invoice</button><button type="submit" class="primary-btn">Save Invoice</button></div>
+            </div>
+
+            <div class="form-grid four">
+              <div class="field"><label for="invoiceOrderNo">Order number</label><input id="invoiceOrderNo" readonly /></div>
+              <div class="field"><label for="invoiceClientName">Client name *</label><input id="invoiceClientName" required placeholder="e.g. Md. Rahman" /></div>
+              <div class="field"><label for="invoiceClientEmail">Client email</label><input id="invoiceClientEmail" type="email" placeholder="client@example.com" /></div>
+              <div class="field"><label for="invoiceEventDate">Event date *</label><input id="invoiceEventDate" type="date" required /></div>
+              <div class="field span-2"><label for="invoiceEventVenue">Event venue</label><input id="invoiceEventVenue" placeholder="Venue or address" /></div>
+              <div class="field"><label for="invoiceDueDate">Payment due date</label><input id="invoiceDueDate" type="date" /></div>
+              <div class="field"><label for="invoiceNotes">Invoice notes</label><input id="invoiceNotes" placeholder="Optional payment, delivery, or order note" /></div>
+              <div class="field span-2"><label for="invoiceSourceEvent">Start from a saved event (optional)</label><div class="inline-field-action"><select id="invoiceSourceEvent"><option value="">Choose a previous event…</option></select><button id="loadInvoiceEventBtn" type="button" class="secondary-btn">Load Event</button></div></div>
+            </div>
+          </article>
+
+          <article class="card invoice-menu-card">
+            <div class="card-head stacked-mobile">
+              <div><h3>Invoice menu</h3><p>Add standard or completely custom menu packages. Revenue = price × quantity.</p></div>
+              <button id="addInvoiceMenuRow" type="button" class="secondary-btn">＋ Add Menu</button>
+            </div>
+            <datalist id="invoiceMenuSuggestions"></datalist>
+            <div class="table-wrap invoice-table-wrap">
+              <table class="data-table invoice-table">
+                <thead><tr><th>Menu / Package</th><th>Price per quantity</th><th>Quantity</th><th>Revenue</th><th class="tiny"></th></tr></thead>
+                <tbody id="invoiceItemsBody"></tbody>
+              </table>
+            </div>
+            <div class="invoice-summary-bar">
+              <div><span>Menu lines</span><strong id="invoiceSummaryLines">0</strong></div>
+              <div><span>Total quantity</span><strong id="invoiceSummaryQuantity">0</strong></div>
+              <div class="invoice-total-box"><span>Total invoice revenue</span><strong id="invoiceSummaryRevenue">৳0</strong></div>
+              <button type="submit" class="primary-btn">Save Invoice</button>
+            </div>
+          </article>
+
+          <article class="card payment-card">
+            <div class="card-head stacked-mobile">
+              <div><h3>Payments & Due</h3><p>Record partial payments. The due balance is calculated automatically. With Google Sheets connected, a receipt email is sent to the client after each recorded payment.</p></div>
+            </div>
+            <div class="payment-overview">
+              <div><span>Invoice total</span><strong id="paymentInvoiceTotal">৳0</strong></div>
+              <div><span>Total received</span><strong id="paymentTotalReceived">৳0</strong></div>
+              <div class="payment-due-box"><span>Due amount</span><strong id="paymentDueAmount">৳0</strong></div>
+              <div><span>Due date</span><strong id="paymentDueDateLabel">—</strong></div>
+            </div>
+            <div class="payment-entry-grid">
+              <div class="field"><label for="paymentAmount">Received money</label><div class="money-input"><span class="currency-symbol">৳</span><input id="paymentAmount" type="number" min="0" step="0.01" placeholder="0" /></div></div>
+              <div class="field"><label for="paymentDate">Received date</label><input id="paymentDate" type="date" /></div>
+              <div class="field payment-action-field"><label>&nbsp;</label><button id="recordPaymentBtn" type="button" class="primary-btn">Record Payment & Email Receipt</button></div>
+            </div>
+            <p id="paymentEmailHint" class="help-text">Add the client email above. Email receipts are sent by the Google Apps Script backend; in local-only mode the payment is saved but email remains pending until sync.</p>
+            <div class="table-wrap payment-history-wrap">
+              <table class="data-table payment-history-table">
+                <thead><tr><th>Received date</th><th>Amount</th><th>Due after payment</th><th>Email</th><th></th></tr></thead>
+                <tbody id="paymentHistoryBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </form>
+
+        <article class="card">
+          <div class="card-head stacked-mobile">
+            <div><h3>Previous Invoices</h3><p>Edit, print, duplicate, review payments, or check outstanding dues.</p></div>
+            <div class="history-tools"><input id="invoiceSearch" type="search" placeholder="Search client, order, venue, menu…" /><input id="invoiceMonth" type="month" /><button id="exportInvoiceCsv" class="ghost-btn">Export CSV</button></div>
+          </div>
+          <div id="invoiceHistoryList" class="history-list"></div>
+        </article>
+      </section>
+
+      <section id="view-history" class="view">
+        <article class="card">
+          <div class="card-head stacked-mobile">
+            <div><h3>Previous Events</h3><p>Reuse, edit, itemize, or print any saved event.</p></div>
+            <div class="history-tools"><input id="historySearch" type="search" placeholder="Search event or menu…" /><input id="historyMonth" type="month" /></div>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </article>
+      </section>
+
+      <section id="view-catalog" class="view">
+        <article class="card">
+          <div class="card-head stacked-mobile">
+            <div><h3>Item Catalog</h3><p>Default products from your catering register. Names can be corrected or customized.</p></div>
+            <div class="catalog-tools"><input id="catalogSearch" type="search" placeholder="Search catalog…" /><button id="catalogAddBtn" class="secondary-btn">＋ Add Item</button><button id="catalogResetBtn" class="ghost-btn">Reset defaults</button></div>
+          </div>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Item name</th><th>Default unit</th><th></th></tr></thead><tbody id="catalogBody"></tbody></table></div>
+        </article>
+      </section>
+
+      <section id="view-settings" class="view">
+        <div class="grid-2 settings-grid">
+          <article class="card">
+            <div class="card-head"><div><h3>Google Sheets connection</h3><p>Paste your deployed Google Apps Script web-app URL.</p></div></div>
+            <div class="field"><label for="scriptUrl">Apps Script Web App URL</label><input id="scriptUrl" type="url" placeholder="https://script.google.com/macros/s/.../exec" /></div>
+            <div class="field"><label for="accessKey">Access key (optional but recommended)</label><input id="accessKey" type="password" placeholder="Stored only in this browser" /></div>
+            <div class="button-row"><button id="saveConnectionBtn" class="primary-btn">Save Connection</button><button id="testConnectionBtn" class="secondary-btn">Test Connection</button><button id="syncNowBtn" class="ghost-btn">Sync Now</button></div>
+            <p class="help-text">Without a Google Sheets connection the app still works, but data is stored only in this browser.</p>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Business settings</h3><p>These settings control display and printing.</p></div></div>
+            <div class="field"><label for="businessName">Business name</label><input id="businessName" value="Al-Aqsa Catering Center" /></div>
+            <div class="form-grid two"><div class="field"><label for="businessPhone">Business phone</label><input id="businessPhone" placeholder="Phone shown on invoices" /></div><div class="field"><label for="businessAddress">Business address</label><input id="businessAddress" placeholder="Address shown on invoices" /></div></div>
+            <div class="form-grid two"><div class="field"><label for="currencyCode">Currency</label><select id="currencyCode"><option value="BDT">BDT — ৳</option><option value="USD">USD — $</option><option value="GBP">GBP — £</option><option value="EUR">EUR — €</option></select></div><div class="field"><label for="localeCode">Number format</label><select id="localeCode"><option value="en-BD">Bangladesh / English</option><option value="bn-BD">Bangladesh / বাংলা</option><option value="en-US">United States</option></select></div></div>
+            <button id="saveBusinessSettings" class="primary-btn">Save Settings</button>
+          </article>
+
+          <article class="card">
+            <div class="card-head"><div><h3>Backup & transfer</h3><p>Useful before changing computers or browsers.</p></div></div>
+            <div class="button-row"><button id="exportBackupBtn" class="secondary-btn">Export JSON Backup</button><label class="file-btn">Import Backup<input id="importBackupInput" type="file" accept="application/json" /></label></div>
+          </article>
+
+          <article class="card warning-card">
+            <div class="card-head"><div><h3>Security note</h3><p>GitHub Pages is a static public website. Do not put passwords or secret API keys directly into the repository.</p></div></div>
+            <p>For this first version, the optional Apps Script access key is stored in the manager's browser and checked by the spreadsheet backend. For stronger multi-user security, add Google sign-in or a proper authenticated backend later.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <section id="printSheet" class="print-sheet" aria-hidden="true"></section>
+
+  <script src="app.js"></script>
+</body>
+</html>
